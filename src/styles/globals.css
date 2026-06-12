@@ -1,0 +1,474 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   CBAM X Design System
+   Bloomberg Terminal precision × Stripe elegance
+   Dark mode first, light mode as the alternate
+   ============================================================ */
+
+:root {
+  /* Light mode — clean, authoritative, institutional */
+  --surface-base: 0 0% 100%;          /* Pure white — primary surfaces */
+  --surface-raised: 0 0% 99%;         /* Cards, modals */
+  --surface-overlay: 0 0% 98%;        /* Dropdowns, popovers */
+  --surface-sunken: 220 14% 96%;      /* Input backgrounds, table rows */
+
+  /* Electric blue — precise, trustworthy, financial */
+  --accent: 217 91% 51%;              /* #2563EB */
+  --accent-muted: 217 91% 95%;
+  --accent-subtle: 217 91% 98%;
+  --accent-foreground: 0 0% 100%;
+
+  /* Semantic */
+  --success: 142 72% 29%;             /* Forest green — verified, compliant */
+  --success-muted: 142 72% 95%;
+  --success-foreground: 0 0% 100%;
+
+  --warning: 32 95% 44%;              /* Amber — pending, attention */
+  --warning-muted: 32 95% 95%;
+  --warning-foreground: 0 0% 100%;
+
+  --danger: 0 84% 50%;                /* Red — critical, overdue */
+  --danger-muted: 0 84% 96%;
+  --danger-foreground: 0 0% 100%;
+
+  /* Text hierarchy */
+  --ink-primary: 220 13% 9%;          /* Near-black — primary text */
+  --ink-secondary: 220 9% 40%;        /* Medium gray — labels, metadata */
+  --ink-tertiary: 220 7% 60%;         /* Light gray — placeholders, disabled */
+  --ink-disabled: 220 6% 75%;
+
+  /* Borders */
+  --border: 220 13% 91%;
+  --border-strong: 220 13% 82%;
+  --border-subtle: 220 13% 95%;
+}
+
+/* Dark mode — Bloomberg terminal energy */
+.dark,
+[data-theme="dark"] {
+  --surface-base: 222 14% 8%;         /* Deep charcoal — primary surfaces */
+  --surface-raised: 222 14% 11%;      /* Cards */
+  --surface-overlay: 222 14% 13%;     /* Dropdowns */
+  --surface-sunken: 222 14% 6%;       /* Inputs, table alt rows */
+
+  --accent: 213 94% 68%;              /* Brighter blue in dark */
+  --accent-muted: 213 94% 15%;
+  --accent-subtle: 213 94% 10%;
+  --accent-foreground: 222 14% 8%;
+
+  --success: 142 65% 42%;
+  --success-muted: 142 65% 10%;
+  --success-foreground: 222 14% 8%;
+
+  --warning: 38 92% 55%;
+  --warning-muted: 38 92% 10%;
+  --warning-foreground: 222 14% 8%;
+
+  --danger: 0 80% 60%;
+  --danger-muted: 0 80% 10%;
+  --danger-foreground: 0 0% 100%;
+
+  --ink-primary: 220 14% 92%;
+  --ink-secondary: 220 9% 64%;
+  --ink-tertiary: 220 7% 44%;
+  --ink-disabled: 220 6% 30%;
+
+  --border: 222 14% 18%;
+  --border-strong: 222 14% 26%;
+  --border-subtle: 222 14% 13%;
+}
+
+/* ============================================================
+   Base styles
+   ============================================================ */
+
+* {
+  box-sizing: border-box;
+  border-color: hsl(var(--border));
+}
+
+html {
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: hsl(var(--surface-sunken));
+  color: hsl(var(--ink-primary));
+  line-height: 1.5;
+}
+
+/* Focus visible — keyboard navigation */
+:focus-visible {
+  outline: 2px solid hsl(var(--accent) / 0.6);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ============================================================
+   Typography
+   ============================================================ */
+
+.font-mono-data {
+  font-family: var(--font-geist-mono), 'JetBrains Mono', monospace;
+  font-feature-settings: 'tnum' on, 'lnum' on; /* tabular numbers */
+}
+
+/* Data values — used for emissions numbers, scores, financial figures */
+.data-value {
+  font-family: var(--font-geist-mono), monospace;
+  font-feature-settings: 'tnum' on;
+  letter-spacing: -0.01em;
+}
+
+/* ============================================================
+   Layout primitives
+   ============================================================ */
+
+/* App shell */
+.app-shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  grid-template-rows: 100vh;
+  overflow: hidden;
+}
+
+@media (max-width: 1024px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Page content area */
+.page-container {
+  padding: 24px 32px;
+  max-width: 1440px;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    padding: 16px;
+  }
+}
+
+/* ============================================================
+   Component classes
+   ============================================================ */
+
+/* Card — primary surface container */
+.card {
+  background-color: hsl(var(--surface-raised));
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  padding: 20px 24px;
+}
+
+/* Metric card — dashboard stat */
+.metric-card {
+  background-color: hsl(var(--surface-raised));
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+
+.metric-card .metric-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: hsl(var(--ink-secondary));
+  margin-bottom: 6px;
+}
+
+.metric-card .metric-value {
+  font-size: 24px;
+  font-weight: 500;
+  color: hsl(var(--ink-primary));
+  letter-spacing: -0.02em;
+  font-family: var(--font-geist-mono), monospace;
+  font-feature-settings: 'tnum' on;
+}
+
+/* Status badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.badge-success { background: hsl(var(--success-muted)); color: hsl(var(--success)); }
+.badge-warning { background: hsl(var(--warning-muted)); color: hsl(var(--warning)); }
+.badge-danger  { background: hsl(var(--danger-muted));  color: hsl(var(--danger));  }
+.badge-accent  { background: hsl(var(--accent-muted));  color: hsl(var(--accent));  }
+.badge-neutral { background: hsl(var(--border));        color: hsl(var(--ink-secondary)); }
+
+/* Compliance score ring */
+.score-ring {
+  --score-circumference: 251.33px; /* 2π × 40 */
+  --score-offset: calc(var(--score-circumference) * (1 - var(--score) / 100));
+}
+
+/* Data table */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: hsl(var(--ink-secondary));
+  text-align: left;
+  padding: 8px 16px;
+  border-bottom: 1px solid hsl(var(--border));
+  white-space: nowrap;
+}
+
+.data-table td {
+  font-size: 13px;
+  padding: 12px 16px;
+  border-bottom: 1px solid hsl(var(--border-subtle));
+  color: hsl(var(--ink-primary));
+  vertical-align: middle;
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tr:hover td {
+  background-color: hsl(var(--surface-sunken));
+}
+
+/* ============================================================
+   Sidebar
+   ============================================================ */
+
+.sidebar {
+  background-color: hsl(var(--surface-base));
+  border-right: 1px solid hsl(var(--border));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 400;
+  color: hsl(var(--ink-secondary));
+  transition: background-color 0.1s, color 0.1s;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.sidebar-nav-item:hover {
+  background-color: hsl(var(--surface-sunken));
+  color: hsl(var(--ink-primary));
+}
+
+.sidebar-nav-item.active {
+  background-color: hsl(var(--accent-muted));
+  color: hsl(var(--accent));
+  font-weight: 500;
+}
+
+/* ============================================================
+   Form elements
+   ============================================================ */
+
+.input {
+  height: 36px;
+  width: 100%;
+  background-color: hsl(var(--surface-base));
+  border: 1px solid hsl(var(--border));
+  border-radius: 7px;
+  padding: 0 12px;
+  font-size: 13px;
+  color: hsl(var(--ink-primary));
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+
+.input:hover {
+  border-color: hsl(var(--border-strong));
+}
+
+.input:focus {
+  border-color: hsl(var(--accent));
+  box-shadow: 0 0 0 3px hsl(var(--accent) / 0.12);
+}
+
+.input::placeholder {
+  color: hsl(var(--ink-tertiary));
+}
+
+.input-error {
+  border-color: hsl(var(--danger));
+}
+
+.input-error:focus {
+  box-shadow: 0 0 0 3px hsl(var(--danger) / 0.12);
+}
+
+/* Button variants */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: hsl(var(--ink-primary));
+  border: 1px solid hsl(var(--border));
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: hsl(var(--surface-sunken));
+  border-color: hsl(var(--border-strong));
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: hsl(var(--ink-secondary));
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background-color: hsl(var(--surface-sunken));
+  color: hsl(var(--ink-primary));
+}
+
+.btn-danger {
+  background-color: hsl(var(--danger-muted));
+  color: hsl(var(--danger));
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: hsl(var(--danger));
+  color: hsl(var(--danger-foreground));
+}
+
+/* Button sizes */
+.btn-sm { height: 30px; padding: 0 10px; font-size: 12px; border-radius: 6px; }
+.btn-lg { height: 42px; padding: 0 20px; font-size: 14px; border-radius: 8px; }
+
+/* ============================================================
+   Loading / skeleton states
+   ============================================================ */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--surface-sunken)) 25%,
+    hsl(var(--border)) 50%,
+    hsl(var(--surface-sunken)) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 4px;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ============================================================
+   Scrollbar styling
+   ============================================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--border-strong));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--ink-tertiary));
+}
+
+/* ============================================================
+   RTL support (Arabic)
+   ============================================================ */
+
+[dir="rtl"] .app-shell {
+  grid-template-columns: 1fr 240px;
+}
+
+[dir="rtl"] .sidebar {
+  border-right: none;
+  border-left: 1px solid hsl(var(--border));
+}
+
+/* ============================================================
+   Print styles (for reports)
+   ============================================================ */
+
+@media print {
+  .sidebar,
+  .top-bar,
+  .btn,
+  [data-no-print] {
+    display: none !important;
+  }
+
+  .page-container {
+    padding: 0;
+    max-width: 100%;
+  }
+}

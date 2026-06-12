@@ -1,0 +1,65 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "products": "Products",
+    "facilities": "Facilities",
+    "suppliers": "Suppliers",
+    "documents": "Documents",
+    "emissions": "Emissions",
+    "submissions": "Submissions",
+    "financial": "Financial impact",
+    "reports": "Reports",
+    "audit": "Audit log",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "greeting_morning": "Good morning",
+    "greeting_afternoon": "Good afternoon",
+    "greeting_evening": "Good evening",
+    "compliance_score": "Compliance score",
+    "submission_deadline": "Submission deadline",
+    "supplier_coverage": "Supplier coverage",
+    "open_issues": "Open issues",
+    "embedded_emissions": "Embedded emissions",
+    "recent_activity": "Recent activity",
+    "days_remaining": "days remaining",
+    "no_issues": "No open issues",
+    "all_clear": "All clear"
+  },
+  "risk": {
+    "low": "Low risk",
+    "medium": "Medium risk",
+    "high": "High risk",
+    "critical": "Critical"
+  },
+  "severity": {
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "info": "Info"
+  },
+  "status": {
+    "active": "Active",
+    "invited": "Invited",
+    "onboarding": "Onboarding",
+    "suspended": "Suspended",
+    "draft": "Draft",
+    "submitted": "Submitted",
+    "accepted": "Accepted",
+    "rejected": "Rejected"
+  },
+  "common": {
+    "save": "Save changes",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "invite": "Invite",
+    "send": "Send",
+    "loading": "Loading…",
+    "saving": "Saving…",
+    "no_data": "No data yet",
+    "optional": "optional"
+  }
+}

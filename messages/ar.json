@@ -1,0 +1,65 @@
+{
+  "nav": {
+    "dashboard": "لوحة التحكم",
+    "products": "المنتجات",
+    "facilities": "المنشآت",
+    "suppliers": "الموردون",
+    "documents": "المستندات",
+    "emissions": "الانبعاثات",
+    "submissions": "التقديمات",
+    "financial": "الأثر المالي",
+    "reports": "التقارير",
+    "audit": "سجل التدقيق",
+    "settings": "الإعدادات"
+  },
+  "dashboard": {
+    "greeting_morning": "صباح الخير",
+    "greeting_afternoon": "مساء الخير",
+    "greeting_evening": "مساء الخير",
+    "compliance_score": "درجة الامتثال",
+    "submission_deadline": "الموعد النهائي للتقديم",
+    "supplier_coverage": "تغطية الموردين",
+    "open_issues": "المشكلات المفتوحة",
+    "embedded_emissions": "الانبعاثات المضمنة",
+    "recent_activity": "النشاط الأخير",
+    "days_remaining": "أيام متبقية",
+    "no_issues": "لا توجد مشكلات مفتوحة",
+    "all_clear": "كل شيء على ما يرام"
+  },
+  "risk": {
+    "low": "مخاطر منخفضة",
+    "medium": "مخاطر متوسطة",
+    "high": "مخاطر عالية",
+    "critical": "حرج"
+  },
+  "severity": {
+    "critical": "حرج",
+    "high": "عالي",
+    "medium": "متوسط",
+    "low": "منخفض",
+    "info": "معلومات"
+  },
+  "status": {
+    "active": "نشط",
+    "invited": "مدعو",
+    "onboarding": "جاري التأهيل",
+    "suspended": "معلق",
+    "draft": "مسودة",
+    "submitted": "مقدم",
+    "accepted": "مقبول",
+    "rejected": "مرفوض"
+  },
+  "common": {
+    "save": "حفظ التغييرات",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "add": "إضافة",
+    "invite": "دعوة",
+    "send": "إرسال",
+    "loading": "جاري التحميل…",
+    "saving": "جاري الحفظ…",
+    "no_data": "لا توجد بيانات بعد",
+    "optional": "اختياري"
+  }
+}
