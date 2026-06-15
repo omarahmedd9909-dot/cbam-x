@@ -57,7 +57,11 @@ export const POST = withAuth(async (request: NextRequest, ctx) => {
   // Validate inputs
   const validation = validateCalculationInputs(method, direct_inputs, indirect_inputs, production_volume);
   if (!validation.valid && method === 'actual') {
-    return badRequest(validation.errors[0] ?? 'Invalid calculation inputs');
+    return badRequest(
+      validation.errors.length > 1
+        ? `Multiple validation errors: ${validation.errors.join('; ')}`
+        : validation.errors[0] ?? 'Invalid calculation inputs'
+    );
   }
 
   // Get default emission factors for sector
@@ -84,7 +88,7 @@ export const POST = withAuth(async (request: NextRequest, ctx) => {
       method,
       production_volume,
       country: facilityCountry,
-      sector: product.cbam_sector as IndustrySector ?? 'iron_steel',
+      sector: (product.cbam_sector as IndustrySector) ?? 'iron_steel',
       direct_inputs,
       indirect_inputs,
       notes,

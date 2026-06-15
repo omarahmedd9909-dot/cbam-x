@@ -115,11 +115,15 @@ async function syncSubscription(
 
   // Find matching plan by Stripe price ID
   const priceId = stripeSub.items.data[0]?.price.id;
+  if (!priceId) {
+    console.warn(`No price ID found for subscription ${stripeSub.id}`);
+    return;
+  }
   const { data: plan } = await supabase
     .from('subscription_plans')
     .select('id, slug')
-    .or(`stripe_price_id_monthly.eq.${priceId},stripe_price_id_annual.eq.${priceId}`)
-    .single();
+    .or(`stripe_price_id_monthly.eq."${priceId}",stripe_price_id_annual.eq."${priceId}"`)
+    .maybeSingle();
 
   const status = stripeSub.status === 'active' ? 'active' :
                  stripeSub.status === 'trialing' ? 'trialing' :
@@ -293,7 +297,8 @@ export async function createCheckoutSession(
     },
   });
 
-  return session.url!;
+  if (!session.url) throw new Error('Stripe checkout session returned no URL');
+  return session.url;
 }
 
 // ----------------------------------------------------------------

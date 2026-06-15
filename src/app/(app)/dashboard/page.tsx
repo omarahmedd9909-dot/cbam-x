@@ -44,6 +44,8 @@ export default async function DashboardPage() {
     supabase.from('emission_calculations').select('product_id, total_co2e, method, products(name, cbam_sector)').eq('org_id', org_id).eq('period', period).order('total_co2e', { ascending: false }).limit(10),
   ]);
 
+  if (orgResult.error || !orgResult.data) redirect('/login');
+
   const score = scoreResult.data;
   const issues = issuesResult.data ?? [];
   const regAlerts = regAlertsResult.data ?? [];
@@ -51,8 +53,9 @@ export default async function DashboardPage() {
   const submission = submissionResult.data;
   const emissions = emissionsResult.data ?? [];
 
+  // 0-based month indices for Q1–Q4 end months (Mar, Jun, Sep, Dec)
   const quarterEndMonth = [2, 5, 8, 11][q - 1] ?? 11;
-  const deadlineDate = new Date(now.getFullYear(), quarterEndMonth + 1, 30);
+  const deadlineDate = new Date(now.getFullYear(), quarterEndMonth + 1, 0);
   const daysToDeadline = Math.ceil((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
   const supplierStats = { total: 0, active: 0, pending: 0, overdue: 0 };

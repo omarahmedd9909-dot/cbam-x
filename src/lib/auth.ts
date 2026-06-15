@@ -118,11 +118,12 @@ export async function writeAuditLog(
     metadata?: Record<string, unknown>;
   }
 ) {
-  await supabase.from('audit_logs').insert({
+  const { error } = await supabase.from('audit_logs').insert({
     ...entry,
     actor_type: entry.actor_type ?? 'user',
     metadata: entry.metadata ?? {},
   });
+  if (error) console.error('Failed to write audit log:', error, entry);
 }
 
 // Standard success response

@@ -117,6 +117,17 @@ export const POST = withAuth(async (request: NextRequest, ctx) => {
       .map((c) => (c as { type: 'text'; text: string }).text)
       .join('');
 
+    if (!rawText) {
+      await ctx.supabase
+        .from('documents')
+        .update({ ocr_status: 'failed' })
+        .eq('id', document_id);
+      return NextResponse.json(
+        { error: { code: 'NO_TEXT_IN_RESPONSE', message: 'Model returned no extractable text' } },
+        { status: 422 }
+      );
+    }
+
     let extractedData: Record<string, unknown> = {};
     let confidence = 0;
 

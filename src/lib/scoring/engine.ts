@@ -97,7 +97,7 @@ export async function computeComplianceScore(
       .select('id, status, submitted_at')
       .eq('org_id', ctx.org_id)
       .eq('framework_id', ctx.framework_id)
-      .eq('period_quarter', ctx.period)
+      .eq('period', ctx.period)
       .maybeSingle(),
   ]);
 
@@ -184,9 +184,7 @@ export async function computeComplianceScore(
     const coveragePct =
       questionnaires.length > 0
         ? (acceptedQuestionnaires.length / questionnaires.length) * 100
-        : activeSuppliers.length > 0
-        ? 50 // suppliers exist but no questionnaires sent
-        : 20;
+        : 0;
 
     supplierCoverageScore = coveragePct;
 
@@ -462,8 +460,9 @@ function getDeadlineDays(period: string): number {
   const [year, q] = period.split('-Q');
   if (!year || !q) return 90;
 
-  const quarterEndMonth: Record<string, number> = { '1': 2, '2': 5, '3': 8, '4': 11 };
-  const monthIndex = quarterEndMonth[q] ?? 11;
+  // monthIndex is 0-based; new Date(y, m+1, 0) gives last day of month m
+  const quarterEndMonth: Record<string, number> = { '1': 2, '2': 4, '3': 7, '4': 10 };
+  const monthIndex = quarterEndMonth[q] ?? 10;
   const lastDayOfQuarter = new Date(Number(year), monthIndex + 1, 0);
   const deadline = new Date(lastDayOfQuarter);
   deadline.setDate(deadline.getDate() + 30);
