@@ -143,7 +143,7 @@ export default function LoginPage() {
 
                 <p className="mt-4 text-center text-xs" style={{ color: 'hsl(var(--ink-tertiary))' }}>
                   No account yet?{' '}
-                  <Link href="/signup" style={{ color: 'hsl(var(--accent))' }}>
+                  <Link href="/onboarding" style={{ color: 'hsl(var(--accent))' }}>
                     Create one free
                   </Link>
                 </p>

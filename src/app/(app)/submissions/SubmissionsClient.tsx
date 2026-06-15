@@ -53,33 +53,45 @@ export function SubmissionsClient({ submissions: initialSubs, calculations, fram
     if (!framework) return;
     setCreating(true);
 
-    const { data, error } = await supabase
-      .from('submissions')
-      .insert({
-        org_id: orgId,
-        framework_id: framework.id,
-        period_quarter: currentPeriod,
-        status: 'draft',
-        calculation_ids: calculations.map(c => c.id),
-        compliance_score: currentScore?.overall_score ?? null,
-        notes: notes || null,
-      })
-      .select('*')
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('submissions')
+        .insert({
+          org_id: orgId,
+          framework_id: framework.id,
+          period_quarter: currentPeriod,
+          status: 'draft',
+          calculation_ids: calculations.map(c => c.id),
+          compliance_score: currentScore?.overall_score ?? null,
+          notes: notes || null,
+        })
+        .select('*')
+        .single();
 
-    if (!error && data) {
+      if (error || !data) throw new Error(error?.message ?? 'Failed to create submission');
+
       setSubmissions(prev => [data as Submission, ...prev]);
       setShowBuilder(false);
+    } catch (err) {
+      console.error('Submission creation error:', err);
+      alert(`Failed to create submission: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setCreating(false);
     }
-    setCreating(false);
   }
 
   async function handleMarkSubmitted(submissionId: string) {
     const ref = `CBAM-${orgId.slice(0, 8).toUpperCase()}-${currentPeriod}`;
-    await supabase
+    const { error } = await supabase
       .from('submissions')
       .update({ status: 'submitted', submitted_at: new Date().toISOString(), eu_reference: ref })
       .eq('id', submissionId);
+
+    if (error) {
+      console.error('Failed to mark submission as submitted:', error);
+      alert('Failed to update submission status. Please try again.');
+      return;
+    }
 
     setSubmissions(prev => prev.map(s => s.id === submissionId
       ? { ...s, status: 'submitted', submitted_at: new Date().toISOString(), eu_reference: ref }

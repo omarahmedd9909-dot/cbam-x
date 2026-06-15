@@ -86,19 +86,30 @@ export function EmissionsClient({ products, facilities, calculations: initialCal
       notes: form.notes || undefined,
     };
 
-    const res = await fetch('/api/emissions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
+    try {
+      const res = await fetch('/api/emissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
 
-    const result = await res.json();
-    if (result.data) {
-      setCalculations(prev => [{ ...result.data, product: selectedProduct } as Calculation, ...prev]);
-      setShowForm(false);
-      setForm({ product_id: '', facility_id: '', period: currentPeriod, method: 'actual', production_volume: '', fuel_type: '', fuel_consumption: '', fuel_unit: 'GJ', process_emissions: '', electricity_mwh: '', electricity_factor: '', notes: '' });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error?.message ?? `Calculation failed (${res.status})`);
+      }
+
+      const result = await res.json();
+      if (result.data) {
+        setCalculations(prev => [{ ...result.data, product: selectedProduct } as Calculation, ...prev]);
+        setShowForm(false);
+        setForm({ product_id: '', facility_id: '', period: currentPeriod, method: 'actual', production_volume: '', fuel_type: '', fuel_consumption: '', fuel_unit: 'GJ', process_emissions: '', electricity_mwh: '', electricity_factor: '', notes: '' });
+      }
+    } catch (err) {
+      console.error('Calculation error:', err);
+      alert(`Failed to run calculation: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   }
 
   const totalCO2e = calculations.filter(c => c.period === currentPeriod).reduce((sum, c) => sum + (c.total_co2e ?? 0), 0);

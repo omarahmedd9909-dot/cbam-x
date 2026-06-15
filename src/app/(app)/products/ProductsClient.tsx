@@ -80,11 +80,21 @@ export function ProductsClient({ products: initialProducts, facilities, orgId, u
   async function checkApplicability(productId: string, cnCode: string) {
     setCnCheckId(productId);
     try {
-      const { data: cnEntry } = await supabase
+      // Try exact 8-digit match first, fall back to 4-digit heading
+      let { data: cnEntry } = await supabase
         .from('cn_code_registry')
         .select('is_cbam_covered, cbam_sector')
-        .eq('cn_code', cnCode.slice(0, 4)) // match on 4-digit heading
+        .eq('cn_code', cnCode)
         .maybeSingle();
+
+      if (!cnEntry) {
+        const fallback = await supabase
+          .from('cn_code_registry')
+          .select('is_cbam_covered, cbam_sector')
+          .eq('cn_code', cnCode.slice(0, 4))
+          .maybeSingle();
+        cnEntry = fallback.data;
+      }
 
       const isCovered = cnEntry?.is_cbam_covered ?? false;
 

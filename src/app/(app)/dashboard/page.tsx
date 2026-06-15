@@ -34,7 +34,7 @@ export default async function DashboardPage() {
   const q = Math.ceil((now.getMonth() + 1) / 3);
   const period = `${now.getFullYear()}-Q${q}`;
 
-  const [orgResult, scoreResult, issuesResult, regAlertsResult, recentActivityResult, submissionResult, emissionsResult] = await Promise.all([
+  const [orgResult, scoreResult, issuesResult, regAlertsResult, recentActivityResult, submissionResult, emissionsResult, suppliersResult, questionnairesResult] = await Promise.all([
     supabase.from('organizations').select('id, name, plan, country').eq('id', org_id).single(),
     supabase.from('compliance_scores').select('*').eq('org_id', org_id).eq('period', period).order('version', { ascending: false }).limit(1).maybeSingle(),
     supabase.from('compliance_issues').select('*').eq('org_id', org_id).eq('period', period).is('resolved_at', null).eq('dismissed', false).order('severity', { ascending: true }).limit(10),
@@ -42,6 +42,8 @@ export default async function DashboardPage() {
     supabase.from('audit_logs').select('*, user:users(full_name, role)').eq('org_id', org_id).order('created_at', { ascending: false }).limit(8),
     supabase.from('submissions').select('id, status, period_quarter, submitted_at').eq('org_id', org_id).eq('period_quarter', period).maybeSingle(),
     supabase.from('emission_calculations').select('product_id, total_co2e, method, products(name, cbam_sector)').eq('org_id', org_id).eq('period', period).order('total_co2e', { ascending: false }).limit(10),
+    supabase.from('suppliers').select('id, status').eq('org_id', org_id),
+    supabase.from('supplier_questionnaires').select('id, status, due_date').eq('org_id', org_id).eq('period', period),
   ]);
 
   if (orgResult.error || !orgResult.data) redirect('/login');
@@ -56,9 +58,16 @@ export default async function DashboardPage() {
   // 0-based month indices for Q1–Q4 end months (Mar, Jun, Sep, Dec)
   const quarterEndMonth = [2, 5, 8, 11][q - 1] ?? 11;
   const deadlineDate = new Date(now.getFullYear(), quarterEndMonth + 1, 0);
-  const daysToDeadline = Math.ceil((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const daysToDeadline = Math.max(0, Math.ceil((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
 
-  const supplierStats = { total: 0, active: 0, pending: 0, overdue: 0 };
+  const allSuppliers = suppliersResult.data ?? [];
+  const allQuestionnaires = questionnairesResult.data ?? [];
+  const supplierStats = {
+    total: allSuppliers.length,
+    active: allSuppliers.filter(s => s.status === 'active').length,
+    pending: allSuppliers.filter(s => ['invited', 'onboarding'].includes(s.status)).length,
+    overdue: allQuestionnaires.filter(q => q.due_date && new Date(q.due_date) < new Date() && q.status !== 'accepted').length,
+  };
 
   const h = now.getHours();
   const greeting = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';

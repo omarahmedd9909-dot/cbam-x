@@ -113,38 +113,54 @@ export function DocumentsClient({ documents: initialDocs, suppliers, orgId, user
       .select('*, supplier:suppliers(id, name)')
       .single();
 
-    if (!dbError && doc) {
-      setDocuments(prev => [doc as DocumentItem, ...prev]);
-      setShowUpload(false);
-      setPendingFile(null);
-      setUploadForm({ type: 'invoice', supplier_id: '', period: '' });
-      // Auto-trigger OCR
-      handleExtract(doc.id);
+    if (dbError || !doc) {
+      console.error('Failed to save document record:', dbError);
+      alert('Upload failed — could not save document. Please try again.');
+      setUploading(false);
+      return;
     }
+
+    setDocuments(prev => [doc as DocumentItem, ...prev]);
+    setShowUpload(false);
+    setPendingFile(null);
+    setUploadForm({ type: 'invoice', supplier_id: '', period: '' });
     setUploading(false);
+    // Auto-trigger OCR after state is settled
+    handleExtract(doc.id);
   }
 
   async function handleExtract(docId: string) {
     setExtracting(docId);
     setDocuments(prev => prev.map(d => d.id === docId ? { ...d, ocr_status: 'processing' } : d));
 
-    const res = await fetch('/api/ai/ocr', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ document_id: docId }),
-    });
+    try {
+      const res = await fetch('/api/ai/ocr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ document_id: docId }),
+      });
 
-    const result = await res.json();
-    if (result.data) {
-      setDocuments(prev => prev.map(d =>
-        d.id === docId
-          ? { ...d, ocr_status: 'completed', ocr_confidence: result.data.confidence, ocr_data: { extracted_fields: result.data.extracted_fields } }
-          : d
-      ));
-    } else {
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error?.message ?? `OCR failed (${res.status})`);
+      }
+
+      const result = await res.json();
+      if (result.data) {
+        setDocuments(prev => prev.map(d =>
+          d.id === docId
+            ? { ...d, ocr_status: 'completed', ocr_confidence: result.data.confidence, ocr_data: { extracted_fields: result.data.extracted_fields } }
+            : d
+        ));
+      } else {
+        throw new Error('No data returned from OCR');
+      }
+    } catch (err) {
+      console.error('OCR extraction error:', err);
       setDocuments(prev => prev.map(d => d.id === docId ? { ...d, ocr_status: 'failed' } : d));
+    } finally {
+      setExtracting(null);
     }
-    setExtracting(null);
   }
 
   const filtered = documents.filter(d =>
