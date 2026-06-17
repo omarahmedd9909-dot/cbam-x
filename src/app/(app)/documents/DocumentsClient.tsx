@@ -2,9 +2,8 @@
 
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { FileText, Upload, Search, Zap, CheckCircle, Clock, XCircle, Eye, Archive, Filter } from 'lucide-react';
+import { FileText, Upload, Search, Zap, CheckCircle, Clock, XCircle, Eye, Trash2 } from 'lucide-react';
 import { clsx } from 'clsx';
-import { createClient } from '@/lib/supabase/client';
 
 interface DocumentItem {
   id: string;
@@ -66,7 +65,6 @@ export function DocumentsClient({ documents: initialDocs, suppliers, orgId, user
   const [showUpload, setShowUpload] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
 
-  const supabase = createClient();
   const canEdit = ['admin', 'analyst'].includes(userRole);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -87,51 +85,37 @@ export function DocumentsClient({ documents: initialDocs, suppliers, orgId, user
     if (!pendingFile) return;
     setUploading(true);
 
-    const ext = pendingFile.name.split('.').pop();
-    const path = `${orgId}/${Date.now()}.${ext}`;
+    try {
+      const form = new FormData();
+      form.append('file', pendingFile);
+      form.append('type', uploadForm.type);
+      if (uploadForm.supplier_id) form.append('supplier_id', uploadForm.supplier_id);
+      if (uploadForm.period) form.append('period', uploadForm.period);
 
-    const { error: storageError } = await supabase.storage
-      .from('documents')
-      .upload(path, pendingFile);
+      const res = await fetch('/api/documents/upload', {
+        method: 'POST',
+        body: form,
+      });
 
-    if (storageError) {
-      console.error('Storage upload error:', storageError);
-      alert(`Upload failed: ${storageError.message}`);
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result?.error?.message ?? `Upload failed (${res.status})`);
+      }
+
+      const doc = result.data as DocumentItem;
+      setDocuments(prev => [doc, ...prev]);
+      setShowUpload(false);
+      setPendingFile(null);
+      setUploadForm({ type: 'invoice', supplier_id: '', period: '' });
+      // Auto-trigger OCR
+      handleExtract(doc.id);
+    } catch (err) {
+      console.error('Upload error:', err);
+      alert(err instanceof Error ? err.message : 'Upload failed. Please try again.');
+    } finally {
       setUploading(false);
-      return;
     }
-
-    const { data: doc, error: dbError } = await supabase
-      .from('documents')
-      .insert({
-        org_id: orgId,
-        uploaded_by: userId,
-        filename: pendingFile.name,
-        storage_path: path,
-        file_size_bytes: pendingFile.size,
-        mime_type: pendingFile.type,
-        type: uploadForm.type,
-        supplier_id: uploadForm.supplier_id || null,
-        period: uploadForm.period || null,
-        ocr_status: 'pending',
-      })
-      .select('*, supplier:suppliers(id, name)')
-      .single();
-
-    if (dbError || !doc) {
-      console.error('Failed to save document record:', dbError);
-      alert('Upload failed — could not save document. Please try again.');
-      setUploading(false);
-      return;
-    }
-
-    setDocuments(prev => [doc as DocumentItem, ...prev]);
-    setShowUpload(false);
-    setPendingFile(null);
-    setUploadForm({ type: 'invoice', supplier_id: '', period: '' });
-    setUploading(false);
-    // Auto-trigger OCR after state is settled
-    handleExtract(doc.id);
   }
 
   async function handleExtract(docId: string) {
@@ -165,6 +149,21 @@ export function DocumentsClient({ documents: initialDocs, suppliers, orgId, user
       setDocuments(prev => prev.map(d => d.id === docId ? { ...d, ocr_status: 'failed' } : d));
     } finally {
       setExtracting(null);
+    }
+  }
+
+  async function handleDelete(docId: string) {
+    if (!confirm('Delete this document? This cannot be undone.')) return;
+    try {
+      const res = await fetch(`/api/documents/${docId}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error?.message ?? 'Delete failed');
+      }
+      setDocuments(prev => prev.filter(d => d.id !== docId));
+    } catch (err) {
+      console.error('Delete error:', err);
+      alert(err instanceof Error ? err.message : 'Delete failed');
     }
   }
 
@@ -315,6 +314,16 @@ export function DocumentsClient({ documents: initialDocs, suppliers, orgId, user
                             title="Extract data with AI"
                           >
                             <Zap className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        {canEdit && (
+                          <button
+                            onClick={() => handleDelete(doc.id)}
+                            className="btn btn-ghost btn-sm"
+                            style={{ color: 'hsl(var(--danger))' }}
+                            title="Delete document"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         )}
                       </div>
