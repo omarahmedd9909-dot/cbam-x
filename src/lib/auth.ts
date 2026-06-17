@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import type { User } from '@/types/domain';
+import { DEV_USER, isDevBypassEnabled } from '@/lib/dev-auth';
 
 export interface AuthContext {
   userId: string;
@@ -16,6 +17,17 @@ export function withAuth(
   return async (request: NextRequest, { params }: { params?: Record<string, string> } = {}) => {
     try {
       const supabase = await createClient();
+
+      // Dev bypass — skip Supabase auth entirely
+      if (isDevBypassEnabled()) {
+        const ctx: AuthContext = {
+          userId: DEV_USER.id,
+          orgId: DEV_USER.org_id,
+          role: DEV_USER.role,
+          supabase,
+        };
+        return handler(request, ctx, params);
+      }
 
       const {
         data: { user },
@@ -82,23 +94,25 @@ export async function checkFeature(
   orgId: string,
   feature: string
 ): Promise<boolean> {
+  // Dev bypass — all features enabled
+  if (isDevBypassEnabled()) return true;
+
   const { data } = await supabase
     .from('org_subscriptions')
-    .select('plan:subscription_plans(features, status)')
+    .select('status, plan:subscription_plans(features)')
     .eq('org_id', orgId)
     .single();
 
   if (!data) return false;
 
-  const plan = (data as { plan: { features: Record<string, boolean>; status: string } }).plan;
-  if (!plan) return false;
+  // Check the subscription status (at root of org_subscriptions row)
+  const subData = data as { status: string; plan: { features: Record<string, boolean> } | null };
+  if (!['active', 'trialing'].includes(subData.status)) return false;
 
-  // Check subscription is active
-  const sub = data as { status?: string };
-  // @ts-expect-error - joined data
-  if (!['active', 'trialing'].includes(data.plan?.status ?? sub.status)) return false;
+  const features = subData.plan?.features;
+  if (!features) return true; // no feature restrictions on plan
 
-  return plan.features?.[feature] === true;
+  return features[feature] === true;
 }
 
 // Write to audit log

@@ -94,7 +94,12 @@ export function DocumentsClient({ documents: initialDocs, suppliers, orgId, user
       .from('documents')
       .upload(path, pendingFile);
 
-    if (storageError) { setUploading(false); return; }
+    if (storageError) {
+      console.error('Storage upload error:', storageError);
+      alert(`Upload failed: ${storageError.message}`);
+      setUploading(false);
+      return;
+    }
 
     const { data: doc, error: dbError } = await supabase
       .from('documents')

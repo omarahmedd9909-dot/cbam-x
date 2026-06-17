@@ -1,21 +1,38 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { DEV_USER, isDevBypassEnabled } from '@/lib/dev-auth';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = { title: 'Reports' };
 
 export default async function ReportsPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  const devBypass = isDevBypassEnabled();
 
-  const { data: userData } = await supabase.from('users').select('org_id').eq('id', user.id).single();
-  if (!userData) redirect('/login');
+  let org_id: string;
+  let userRole: string;
+
+  if (devBypass) {
+    org_id = DEV_USER.org_id;
+    userRole = DEV_USER.role;
+  } else {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) redirect('/login');
+
+    const { data: userData } = await supabase
+      .from('users')
+      .select('org_id, role, full_name')
+      .eq('id', user.id)
+      .single();
+    if (!userData) redirect('/login');
+    org_id = userData.org_id;
+    userRole = userData.role;
+  }
 
   const { data: submissions } = await supabase
     .from('submissions')
     .select('id, period_quarter, status, compliance_score, submitted_at, eu_reference')
-    .eq('org_id', userData.org_id)
+    .eq('org_id', org_id)
     .order('created_at', { ascending: false });
 
   return (

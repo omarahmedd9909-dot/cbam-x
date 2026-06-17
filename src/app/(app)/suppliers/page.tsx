@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { DEV_USER, isDevBypassEnabled } from '@/lib/dev-auth';
 import { SuppliersClient } from './SuppliersClient';
 import type { Metadata } from 'next';
 
@@ -11,11 +12,27 @@ export default async function SuppliersPage({
   searchParams: Promise<{ filter?: string; invite?: string }>;
 }) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  const devBypass = isDevBypassEnabled();
 
-  const { data: userData } = await supabase.from('users').select('org_id, role').eq('id', user.id).single();
-  if (!userData) redirect('/login');
+  let org_id: string;
+  let userRole: string;
+
+  if (devBypass) {
+    org_id = DEV_USER.org_id;
+    userRole = DEV_USER.role;
+  } else {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) redirect('/login');
+
+    const { data: userData } = await supabase
+      .from('users')
+      .select('org_id, role, full_name')
+      .eq('id', user.id)
+      .single();
+    if (!userData) redirect('/login');
+    org_id = userData.org_id;
+    userRole = userData.role;
+  }
 
   const params = await searchParams;
 
@@ -23,13 +40,13 @@ export default async function SuppliersPage({
     supabase
       .from('suppliers')
       .select('*')
-      .eq('org_id', userData.org_id)
+      .eq('org_id', org_id)
       .order('created_at', { ascending: false }),
 
     supabase
       .from('supplier_questionnaires')
       .select('supplier_id, status, period, due_date')
-      .eq('org_id', userData.org_id),
+      .eq('org_id', org_id),
 
     supabase
       .from('compliance_frameworks')
@@ -52,8 +69,8 @@ export default async function SuppliersPage({
         suppliers={(suppliersRes.data ?? []) as Parameters<typeof SuppliersClient>[0]['suppliers']}
         questionnaires={(questionnaireRes.data ?? []) as Parameters<typeof SuppliersClient>[0]['questionnaires']}
         frameworkId={frameworkRes.data?.id ?? ''}
-        orgId={userData.org_id}
-        userRole={userData.role}
+        orgId={org_id}
+        userRole={userRole}
         defaultOpenInvite={params.invite === '1'}
         defaultFilter={params.filter}
       />

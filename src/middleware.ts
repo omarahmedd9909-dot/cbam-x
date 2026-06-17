@@ -1,13 +1,24 @@
 import { createServerClient } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
 
-const PUBLIC_ROUTES = ['/login', '/onboarding', '/api/webhooks'];
+const PUBLIC_ROUTES = ['/login', '/onboarding', '/api/webhooks', '/dev-login'];
+
+// Dev bypass — always active in development mode
+const DEV_BYPASS = process.env.NODE_ENV === 'development';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
+  // Dev bypass — skip ALL auth checks when enabled
+  console.log('[middleware] DEV_BYPASS:', DEV_BYPASS, 'NODE_ENV:', process.env.NODE_ENV, 'path:', pathname);
+  if (DEV_BYPASS) {
+    if (pathname === '/login') {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+    return NextResponse.next({ request });
+  }
 
+  const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
   let response = NextResponse.next({ request });
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -32,7 +43,6 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user && !isPublicRoute) {
-    // API routes should return JSON 401, not an HTML redirect
     if (pathname.startsWith('/api/')) {
       return NextResponse.json(
         { error: { code: 'UNAUTHORIZED', message: 'Authentication required' } },

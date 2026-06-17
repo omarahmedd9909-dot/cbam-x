@@ -460,8 +460,9 @@ function getDeadlineDays(period: string): number {
   const [year, q] = period.split('-Q');
   if (!year || !q) return 90;
 
-  // monthIndex is 0-based; new Date(y, m+1, 0) gives last day of month m
-  const quarterEndMonth: Record<string, number> = { '1': 2, '2': 4, '3': 7, '4': 10 };
+  // 0-based month indices: Q1→Mar(2), Q2→Jun(5), Q3→Sep(8), Q4→Dec(11)
+  // new Date(year, monthIndex+1, 0) gives the last day of that month
+  const quarterEndMonth: Record<string, number> = { '1': 2, '2': 5, '3': 8, '4': 11 };
   const monthIndex = quarterEndMonth[q] ?? 10;
   const lastDayOfQuarter = new Date(Number(year), monthIndex + 1, 0);
   const deadline = new Date(lastDayOfQuarter);

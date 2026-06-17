@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { DEV_USER, DEV_ORG, isDevBypassEnabled } from '@/lib/dev-auth';
 import { ComplianceScoreCard } from '@/components/dashboard/ComplianceScoreCard';
 import {
   DeadlineCountdown,
@@ -18,17 +19,31 @@ export const metadata: Metadata = { title: 'Dashboard' };
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
 
-  const { data: userData } = await supabase
-    .from('users')
-    .select('org_id, role, full_name')
-    .eq('id', user.id)
-    .single();
+  // Dev bypass — skip Supabase auth and use mock data
+  const devBypass = isDevBypassEnabled();
+  console.log('[dashboard] NODE_ENV:', process.env.NODE_ENV, 'devBypass:', devBypass);
 
-  if (!userData) redirect('/login');
-  const { org_id } = userData;
+  let userData: { id: string; org_id: string; role: string; full_name: string };
+  let org_id: string;
+
+  if (devBypass) {
+    userData = DEV_USER;
+    org_id = DEV_USER.org_id;
+  } else {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) redirect('/login');
+
+    const { data: dbUser } = await supabase
+      .from('users')
+      .select('org_id, role, full_name')
+      .eq('id', user.id)
+      .single();
+
+    if (!dbUser) redirect('/login');
+    userData = { id: user.id, ...dbUser };
+    org_id = dbUser.org_id;
+  }
 
   const now = new Date();
   const q = Math.ceil((now.getMonth() + 1) / 3);
@@ -46,7 +61,7 @@ export default async function DashboardPage() {
     supabase.from('supplier_questionnaires').select('id, status, due_date').eq('org_id', org_id).eq('period', period),
   ]);
 
-  if (orgResult.error || !orgResult.data) redirect('/login');
+  if (!devBypass && (orgResult.error || !orgResult.data)) redirect('/login');
 
   const score = scoreResult.data;
   const issues = issuesResult.data ?? [];
@@ -86,7 +101,7 @@ export default async function DashboardPage() {
             {greeting}, {userData.full_name?.split(' ')[0] ?? 'there'}
           </h1>
           <p className="text-sm mt-1" style={{ color: 'hsl(var(--ink-secondary))' }}>
-            {orgResult.data?.name} · {period} · EU CBAM
+            {devBypass ? DEV_ORG.name : orgResult.data?.name} · {period} · EU CBAM
           </p>
         </div>
         <QuickActions period={period} />

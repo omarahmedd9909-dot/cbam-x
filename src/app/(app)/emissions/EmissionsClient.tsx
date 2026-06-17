@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Plus, Zap, CheckCircle, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -165,7 +165,7 @@ export function EmissionsClient({ products, facilities, calculations: initialCal
             </thead>
             <tbody>
               {calculations.map(calc => (
-                <>
+                <React.Fragment key={calc.id}>
                   <tr key={calc.id}>
                     <td>
                       <div className="font-medium" style={{ color: 'hsl(var(--ink-primary))' }}>{calc.product?.name ?? '—'}</div>
@@ -200,7 +200,7 @@ export function EmissionsClient({ products, facilities, calculations: initialCal
                       </td>
                     </tr>
                   )}
-                </>
+                </React.Fragment>
               ))}
             </tbody>
           </table>

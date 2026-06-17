@@ -1,23 +1,40 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { DEV_USER, isDevBypassEnabled } from '@/lib/dev-auth';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = { title: 'Audit Log' };
 
 export default async function AuditPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  const devBypass = isDevBypassEnabled();
 
-  const { data: userData } = await supabase.from('users').select('org_id, role').eq('id', user.id).single();
-  if (!userData) redirect('/login');
+  let org_id: string;
+  let userRole: string;
 
-  if (!['admin', 'auditor'].includes(userData.role)) redirect('/dashboard');
+  if (devBypass) {
+    org_id = DEV_USER.org_id;
+    userRole = DEV_USER.role;
+  } else {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) redirect('/login');
+
+    const { data: userData } = await supabase
+      .from('users')
+      .select('org_id, role, full_name')
+      .eq('id', user.id)
+      .single();
+    if (!userData) redirect('/login');
+    org_id = userData.org_id;
+    userRole = userData.role;
+  }
+
+  if (!['admin', 'auditor'].includes(userRole)) redirect('/dashboard');
 
   const { data: logs } = await supabase
     .from('audit_logs')
     .select('*, user:users(full_name, role)')
-    .eq('org_id', userData.org_id)
+    .eq('org_id', org_id)
     .order('created_at', { ascending: false })
     .limit(200);
 
